@@ -31,15 +31,19 @@ import (
 	"appengine/urlfetch"
 
 	"github.com/azoff/goauth2/oauth"
+	"github.com/azoff/goauth2/oauth/jwt"
 )
+
+type CredentialFactory func(appengine.Context) (string, []byte, error)
 
 // NewClient returns an *http.Client authorized for the
 // given scopes with the service account owned by the application.
 // Tokens are cached in memcache until they expire.
-func NewClient(c appengine.Context, scopes ...string) (*http.Client, error) {
+func NewClient(c appengine.Context, factory CredentialFactory, scopes ...string) (*http.Client, error) {
 	t := &transport{
 		Context: c,
 		Scopes:  scopes,
+		Factory: factory,
 		Transport: &urlfetch.Transport{
 			Context:                       c,
 			Deadline:                      0,
@@ -62,6 +66,7 @@ func NewClient(c appengine.Context, scopes ...string) (*http.Client, error) {
 // transport is an oauth.Transport with a custom Refresh and RoundTrip implementation.
 type transport struct {
 	*oauth.Token
+	Factory CredentialFactory
 	Context    appengine.Context
 	Scopes     []string
 	Transport  http.RoundTripper
@@ -69,20 +74,24 @@ type transport struct {
 }
 
 func (t *transport) Refresh() error {
-	// Get a new access token for the application service account.
-	tok, expiry, err := appengine.AccessToken(t.Context, t.Scopes...)
+
+	var scopes = strings.Join(t.Scopes, " ")
+	var client = urlfetch.Client(t.Context)
+
+	// get the key data for the service account
+	iss, key, err := t.Factory(t.Context)
 	if err != nil {
 		return err
 	}
-	t.Token = &oauth.Token{
-		AccessToken: tok,
-		Expiry:      expiry,
+
+	// fetch an access token
+	exchange := jwt.NewToken(iss, scopes, key)
+	if t.Token, err = exchange.Assert(client); err == nil && t.TokenCache != nil {
+		err = t.TokenCache.PutToken(t.Token)
 	}
-	if t.TokenCache != nil {
-		// Cache the token and ignore error (as we can always get a new one).
-		t.TokenCache.PutToken(t.Token)
-	}
-	return nil
+
+	return err
+
 }
 
 // Fetch token from cache or generate a new one if cache miss or expired.
