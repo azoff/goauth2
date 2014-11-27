@@ -66,7 +66,7 @@ func NewClient(c appengine.Context, factory CredentialFactory, scopes ...string)
 // transport is an oauth.Transport with a custom Refresh and RoundTrip implementation.
 type transport struct {
 	*oauth.Token
-	Factory CredentialFactory
+	Factory    CredentialFactory
 	Context    appengine.Context
 	Scopes     []string
 	Transport  http.RoundTripper
