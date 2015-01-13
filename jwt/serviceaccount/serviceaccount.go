@@ -34,7 +34,9 @@ import (
 	"github.com/azoff/goauth2/oauth/jwt"
 )
 
-type CredentialFactory func(appengine.Context) (string, []byte, error)
+type CredentialFactory interface {
+	CreateCredential(appengine.Context) (string, []byte, error)
+}
 
 // NewClient returns an *http.Client authorized for the
 // given scopes with the service account owned by the application.
@@ -79,7 +81,7 @@ func (t *transport) Refresh() error {
 	var client = urlfetch.Client(t.Context)
 
 	// get the key data for the service account
-	iss, key, err := t.Factory(t.Context)
+	iss, key, err := t.Factory.CreateCredential(t.Context)
 	if err != nil {
 		return err
 	}
