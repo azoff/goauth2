@@ -64,7 +64,7 @@ func main() {
 			os.Exit(2)
 		}
 		if *code == "" {
-			// Get an authorization code from the data provider.
+			// Get an authorization code from the data providers.
 			// ("Please ask the user if I can access this resource.")
 			url := config.AuthCodeURL("")
 			fmt.Println("Visit this URL to get a code, then run again with -code=YOUR_CODE\n")

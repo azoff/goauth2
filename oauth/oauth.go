@@ -17,7 +17,7 @@
 //		RedirectURL:  "http://you.example.org/handler",
 //	}
 //
-//	// A landing page redirects to the OAuth provider to get the auth code.
+//	// A landing page redirects to the OAuth providers to get the auth code.
 //	func landing(w http.ResponseWriter, r *http.Request) {
 //		http.Redirect(w, r, config.AuthCodeURL("foo"), http.StatusFound)
 //	}
@@ -97,11 +97,11 @@ func (f CacheFile) PutToken(tok *Token) error {
 // Config is the configuration of an OAuth consumer.
 type Config struct {
 	// ClientId is the OAuth client identifier used when communicating with
-	// the configured OAuth provider.
+	// the configured OAuth providers.
 	ClientId string
 
 	// ClientSecret is the OAuth client secret used when communicating with
-	// the configured OAuth provider.
+	// the configured OAuth providers.
 	ClientSecret string
 
 	// Scope identifies the level of access being requested. Multiple scope
